@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'order_history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -56,21 +57,65 @@ class ProfileScreen extends StatelessWidget {
               }
             ),
             const SizedBox(height: 40),
-            ElevatedButton.icon(
-              onPressed: () {
-                FirebaseAuth.instance.signOut();
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Sign Out'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  _buildProfileOption(
+                    context, 
+                    icon: Icons.receipt_long, 
+                    title: 'Order History',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const OrderHistoryScreen()),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _buildProfileOption(
+                    context, 
+                    icon: Icons.logout, 
+                    title: 'Sign Out',
+                    isDestructive: true,
+                    onTap: () async {
+                      await FirebaseAuth.instance.signOut();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileOption(BuildContext context, {required IconData icon, required String title, required VoidCallback onTap, bool isDestructive = false}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: isDestructive ? Colors.red : Colors.orange),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18, 
+                  fontWeight: FontWeight.w600,
+                  color: isDestructive ? Colors.red : Colors.black87,
                 ),
               ),
             ),
+            Icon(Icons.chevron_right, color: Colors.grey[400]),
           ],
         ),
       ),

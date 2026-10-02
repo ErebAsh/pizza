@@ -7,8 +7,16 @@ import '../providers/cart_provider.dart';
 import '../providers/favorites_provider.dart';
 import 'pizza_details_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String _searchQuery = '';
+  String _selectedCategory = 'Pizza';
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +109,11 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
         child: TextField(
+          onChanged: (val) {
+            setState(() {
+              _searchQuery = val.toLowerCase();
+            });
+          },
           decoration: InputDecoration(
             hintText: 'Search for pizza, pasta, etc...',
             hintStyle: TextStyle(color: Colors.grey[400]),
@@ -232,37 +245,45 @@ class HomeScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: categories.length,
         itemBuilder: (context, index) {
-          final isSelected = index == 0;
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            decoration: BoxDecoration(
-              color: isSelected ? Colors.orange : Colors.white,
-              borderRadius: BorderRadius.circular(25),
-              boxShadow: [
-                if (!isSelected)
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
+          final category = categories[index]['name']!;
+          final isSelected = category == _selectedCategory;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedCategory = category;
+              });
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.orange : Colors.white,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  if (!isSelected)
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
+                    ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    categories[index]['icon']!,
+                    style: const TextStyle(fontSize: 18),
                   ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Text(
-                  categories[index]['icon']!,
-                  style: const TextStyle(fontSize: 18),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  categories[index]['name']!,
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.black87,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(width: 8),
+                  Text(
+                    category,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -286,9 +307,24 @@ class HomeScreen extends StatelessWidget {
             return const Center(child: Text('No pizzas found!'));
           }
 
-          final pizzas = snapshot.data!.docs.map((doc) {
+          var pizzas = snapshot.data!.docs.map((doc) {
             return Pizza.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
           }).toList();
+
+          // Apply filters
+          pizzas = pizzas.where((p) {
+            final matchesSearch = p.name.toLowerCase().contains(_searchQuery) ||
+                p.description.toLowerCase().contains(_searchQuery);
+            final matchesCategory = p.category == _selectedCategory;
+            // For now, if category is Pizza, we just return anything for backwards compatibility
+            // but normally you strictly match. Let's strictly match if we can.
+            // But since older pizzas in their db might not have category, we allow 'Pizza' to be default.
+            return matchesSearch && (_selectedCategory == 'Pizza' || matchesCategory);
+          }).toList();
+          
+          if (pizzas.isEmpty) {
+            return const Center(child: Text('No matches found.'));
+          }
 
           return ListView.builder(
             scrollDirection: Axis.horizontal,

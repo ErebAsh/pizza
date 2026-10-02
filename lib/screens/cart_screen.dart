@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/cart_provider.dart';
 import 'order_tracking_screen.dart';
 
@@ -96,16 +98,38 @@ class CartScreen extends StatelessWidget {
                             backgroundColor: Colors.orange,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
-                          onPressed: () {
+                          onPressed: () async {
                             if (cart.items.isEmpty) return;
                             
-                            // Checkout logic here
+                            // Save to Firestore
+                            final user = FirebaseAuth.instance.currentUser;
+                            if (user != null) {
+                              final orderData = {
+                                'timestamp': FieldValue.serverTimestamp(),
+                                'total': cart.totalAmount,
+                                'items': cart.items.values.map((item) => {
+                                  'id': item.id,
+                                  'name': item.name,
+                                  'price': item.price,
+                                  'quantity': item.quantity,
+                                }).toList(),
+                              };
+                              await FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(user.uid)
+                                  .collection('orders')
+                                  .add(orderData);
+                            }
+
+                            // Clear cart and navigate
                             cart.clear();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const OrderTrackingScreen(),
-                              ),
-                            );
+                            if (context.mounted) {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const OrderTrackingScreen(),
+                                ),
+                              );
+                            }
                           },
                           child: const Text('Checkout', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),

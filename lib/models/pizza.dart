@@ -4,6 +4,7 @@ class Pizza {
   final String description;
   final double price;
   final String imageUrl;
+  final String category;
   bool isFavorite;
 
   Pizza({
@@ -12,6 +13,7 @@ class Pizza {
     required this.description,
     required this.price,
     required this.imageUrl,
+    this.category = 'Pizza',
     this.isFavorite = false,
   });
 
@@ -22,6 +24,7 @@ class Pizza {
       description: data['description'] ?? '',
       price: (data['price'] ?? 0.0).toDouble(),
       imageUrl: data['imageUrl'] ?? '',
+      category: data['category'] ?? 'Pizza',
     );
   }
 }
