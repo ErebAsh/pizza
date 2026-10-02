@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/pizza.dart';
+import '../providers/cart_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -258,21 +261,31 @@ class HomeScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         children: [
           _buildPizzaCard(
-            'Margherita',
-            '\$12.99',
-            'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400',
+            context,
+            Pizza(
+              id: 'p1',
+              name: 'Margherita',
+              description: 'Classic cheese and tomato',
+              price: 12.99,
+              imageUrl: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400',
+            ),
           ),
           _buildPizzaCard(
-            'Pepperoni',
-            '\$14.99',
-            'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=400',
+            context,
+            Pizza(
+              id: 'p2',
+              name: 'Pepperoni',
+              description: 'Spicy pepperoni with extra cheese',
+              price: 14.99,
+              imageUrl: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=400',
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPizzaCard(String name, String price, String imageUrl) {
+  Widget _buildPizzaCard(BuildContext context, Pizza pizza) {
     return Container(
       width: 200,
       margin: const EdgeInsets.symmetric(horizontal: 8),
@@ -294,7 +307,7 @@ class HomeScreen extends StatelessWidget {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             child: Image.network(
-              imageUrl,
+              pizza.imageUrl,
               height: 140,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -306,7 +319,7 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  pizza.name,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -330,23 +343,41 @@ class HomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      price,
+                      '\$${pizza.price}',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.deepOrange,
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Colors.orange,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                        size: 20,
+                    GestureDetector(
+                      onTap: () {
+                        Provider.of<CartProvider>(context, listen: false).addItem(pizza);
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${pizza.name} added to cart!'),
+                            duration: const Duration(seconds: 2),
+                            action: SnackBarAction(
+                              label: 'UNDO',
+                              onPressed: () {
+                                Provider.of<CartProvider>(context, listen: false).removeSingleItem(pizza.id);
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: Colors.orange,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.add,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ],
