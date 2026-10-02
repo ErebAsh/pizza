@@ -2,8 +2,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/profile_completion_screen.dart';
 import 'providers/cart_provider.dart';
 
 void main() async {
@@ -43,7 +45,19 @@ class KPizzaApp extends StatelessWidget {
             return const Scaffold(body: Center(child: CircularProgressIndicator()));
           }
           if (snapshot.hasData) {
-            return const MainScreen();
+            return FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance.collection('users').doc(snapshot.data!.uid).get(),
+              builder: (context, userSnapshot) {
+                if (userSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Scaffold(body: Center(child: CircularProgressIndicator()));
+                }
+                if (userSnapshot.hasData && userSnapshot.data!.exists) {
+                  return const MainScreen();
+                } else {
+                  return const ProfileCompletionScreen();
+                }
+              },
+            );
           }
           return const LoginScreen();
         },

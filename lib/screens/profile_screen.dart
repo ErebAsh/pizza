@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -26,9 +27,33 @@ class ProfileScreen extends StatelessWidget {
               child: Icon(Icons.person, size: 50, color: Colors.white),
             ),
             const SizedBox(height: 20),
-            Text(
-              user?.email ?? 'Unknown User',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance.collection('users').doc(user?.uid).get(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                }
+                if (snapshot.hasData && snapshot.data!.exists) {
+                  final data = snapshot.data!.data() as Map<String, dynamic>;
+                  return Column(
+                    children: [
+                      Text(
+                        data['name'] ?? 'Unknown User',
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        user?.email ?? '',
+                        style: const TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    ],
+                  );
+                }
+                return Text(
+                  user?.email ?? 'Unknown User',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                );
+              }
             ),
             const SizedBox(height: 40),
             ElevatedButton.icon(
