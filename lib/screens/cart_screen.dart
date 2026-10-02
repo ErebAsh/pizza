@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
+import 'order_tracking_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -96,10 +97,14 @@ class CartScreen extends StatelessWidget {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                           onPressed: () {
+                            if (cart.items.isEmpty) return;
+                            
                             // Checkout logic here
                             cart.clear();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Order placed successfully!')),
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const OrderTrackingScreen(),
+                              ),
                             );
                           },
                           child: const Text('Checkout', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
