@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/pizza.dart';
 import '../providers/cart_provider.dart';
+import '../providers/favorites_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -320,14 +321,42 @@ class HomeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Image
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            child: Image.network(
-              pizza.imageUrl,
-              height: 140,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                child: Image.network(
+                  pizza.imageUrl,
+                  height: 140,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Consumer<FavoritesProvider>(
+                  builder: (context, favProvider, child) {
+                    final isFav = favProvider.isFavorite(pizza.id);
+                    return GestureDetector(
+                      onTap: () => favProvider.toggleFavorite(pizza),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isFav ? Icons.favorite : Icons.favorite_border,
+                          color: isFav ? Colors.redAccent : Colors.grey,
+                          size: 20,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),

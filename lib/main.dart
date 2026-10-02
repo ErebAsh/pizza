@@ -7,6 +7,7 @@ import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/profile_completion_screen.dart';
 import 'providers/cart_provider.dart';
+import 'providers/favorites_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (ctx) => CartProvider()),
+        ChangeNotifierProvider(create: (ctx) => FavoritesProvider()),
       ],
       child: const KPizzaApp(),
     ),
