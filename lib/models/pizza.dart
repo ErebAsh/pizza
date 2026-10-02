@@ -14,4 +14,14 @@ class Pizza {
     required this.imageUrl,
     this.isFavorite = false,
   });
+
+  factory Pizza.fromFirestore(Map<String, dynamic> data, String documentId) {
+    return Pizza(
+      id: documentId,
+      name: data['name'] ?? '',
+      description: data['description'] ?? '',
+      price: (data['price'] ?? 0.0).toDouble(),
+      imageUrl: data['imageUrl'] ?? '',
+    );
+  }
 }

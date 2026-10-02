@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/pizza.dart';
 import '../providers/cart_provider.dart';
 
@@ -256,31 +257,32 @@ class HomeScreen extends StatelessWidget {
   Widget _buildPopularItems() {
     return SizedBox(
       height: 280,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        children: [
-          _buildPizzaCard(
-            context,
-            Pizza(
-              id: 'p1',
-              name: 'Margherita',
-              description: 'Classic cheese and tomato',
-              price: 12.99,
-              imageUrl: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=400',
-            ),
-          ),
-          _buildPizzaCard(
-            context,
-            Pizza(
-              id: 'p2',
-              name: 'Pepperoni',
-              description: 'Spicy pepperoni with extra cheese',
-              price: 14.99,
-              imageUrl: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=400',
-            ),
-          ),
-        ],
+      child: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('pizzas').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: Colors.orange));
+          }
+          if (snapshot.hasError) {
+            return const Center(child: Text('Error loading pizzas'));
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('No pizzas found!'));
+          }
+
+          final pizzas = snapshot.data!.docs.map((doc) {
+            return Pizza.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+          }).toList();
+
+          return ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            itemCount: pizzas.length,
+            itemBuilder: (context, index) {
+              return _buildPizzaCard(context, pizzas[index]);
+            },
+          );
+        },
       ),
     );
   }
